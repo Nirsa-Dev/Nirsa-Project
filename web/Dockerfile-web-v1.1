@@ -1,0 +1,15 @@
+FROM centos:7
+
+RUN yum install -y httpd httpd-devel gcc gcc-c++ wget perl make &&  mkdir /worker
+WORKDIR /worker/
+RUN wget http://apache.mirror.cdnetworks.com/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz && tar zxvf tomcat-connectors-1.2.46-src.tar.gz
+WORKDIR /worker/tomcat-connectors-1.2.46-src/native/
+RUN ./configure --with-apxs=/bin/apxs \
+        && make && make install \
+        && sed -i 's/\#ServerName www.example.com:80/ServerName localhost/g' /etc/httpd/conf/httpd.conf \
+        && touch /etc/httpd/conf/workers.properties \
+        && echo -e "worker.list=loadbalancer\nworker.loadbalancer.type=lb\nworker.loadbalancer.balanced_workers=worker1,worker2\nworker.loadbalancer.sticky_session=1\n\nworker.worker1.type=ajp13\nworker.worker1.host=10.178.0.7\nworker.worker1.port=8010\nworker.worker1.lbfactor=1\n\nworker.worker2.type=ajp13\nworker.worker2.host=10.178.0.8\nworker.worker2.port=9010\nworker.worker2.lbfactor=1\n" > /etc/httpd/conf/workers.properties \
+        && perl -p -i -e '$.==57 and print "LoadModule jk_module /usr/lib64/httpd/modules/mod_jk.so\n<IfModule jk_module>\n   JkWorkersFile /etc/httpd/conf/workers.properties\n   JkLogFile /var/log/httpd/mod_jk.log\n   JkLogLevel info\n   JkLogStampFormat \"[%a %b %d %H:%M:%S %Y]\"\n   JkMount /*.jsp loadbalancer\n</IfModule>"' /etc/httpd/conf/httpd.conf
+
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+EXPOSE 80
