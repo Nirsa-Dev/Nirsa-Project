@@ -1,0 +1,17 @@
+version: "3"
+services:
+  apache:
+    image: tomcat:v1.1
+    build:
+      context: .
+      dockerfile: Dockerfile-was1-v1.1
+    ports:
+      - "9010:9010"
+
+  zabbix:
+    image: zabbix:v1.0
+    build:
+      context: .
+      dockerfile: Dockerfile-zabbix-v1.0
+    ports:
+      - "10050:10050"
