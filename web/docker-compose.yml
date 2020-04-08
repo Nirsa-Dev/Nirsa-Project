@@ -9,9 +9,9 @@ services:
       - "80:80"
 
   zabbix:
-    image: zabbix:v1.1
+    image: zabbix:v1.2
     build:
       context: .
-      dockerfile: Dockerfile-zabbix-v1.1
+      dockerfile: Dockerfile-zabbix-v1.2
     ports:
       - "10050:10050"
